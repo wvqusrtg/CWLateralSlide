@@ -18,6 +18,7 @@
 {
     CWDrawerTransitiontype _TransitionType;
     CWDrawerAnimationType _animationType;
+    CGFloat _hiddenDelayTime;
 }
 
 
@@ -26,6 +27,8 @@
         _TransitionType = transitionType;
         _animationType = animationType;
         _configuration = configuration;
+        if (_TransitionType == CWDrawerTransitiontypeHidden)
+        [self setupHiddenAnimationDelayTime];
     }
     return self;
 }
@@ -34,10 +37,16 @@
     return [[self alloc] initWithTransitionType:transitionType animationType:animationType configuration:configuration];
 }
 
+- (void)setupHiddenAnimationDelayTime {
+    _hiddenDelayTime = 0;
+    if ([UIDevice currentDevice].systemVersion.floatValue >= 11.0) {
+        _hiddenDelayTime = 0.03;
+    }
+}
 
 #pragma mark - UIViewControllerAnimatedTransitioning
 - (NSTimeInterval)transitionDuration:(nullable id <UIViewControllerContextTransitioning>)transitionContext {
-    return _TransitionType == CWDrawerTransitiontypeShow ? 0.25f : 0.25f;
+    return _TransitionType == CWDrawerTransitiontypeShow ? self.configuration.showAnimDuration : self.configuration.HiddenAnimDuration;
 }
 
 - (void)animateTransition:(id <UIViewControllerContextTransitioning>)transitionContext {
@@ -62,8 +71,6 @@
     }else {
         
     }
-    
-    
 }
 
 - (void)animationViewHidden:(id <UIViewControllerContextTransitioning>)transitionContext {
@@ -71,21 +78,21 @@
     UIViewController *fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIViewController *toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     
-    MaskView *maskView = [MaskView shareInstance];
+    CWMaskView *maskView = [CWMaskView shareInstance];
     for (UIView *view in toVC.view.subviews) {
         if (![maskView.toViewSubViews containsObject:view]) {
             [view removeFromSuperview];
         }
     }
-    
+
     UIView *containerView = [transitionContext containerView];
     UIImageView *backImageView;
     if ([containerView.subviews.firstObject isKindOfClass:[UIImageView class]])
         backImageView = containerView.subviews.firstObject;
     
-    [UIView animateKeyframesWithDuration:[self transitionDuration:transitionContext] delay:0 options:UIViewKeyframeAnimationOptionCalculationModeCubic animations:^{
-        
-        [UIView addKeyframeWithRelativeStartTime:0.01 relativeDuration:0.99 animations:^{
+    [UIView animateKeyframesWithDuration:[self transitionDuration:transitionContext] delay:_hiddenDelayTime options:UIViewKeyframeAnimationOptionCalculationModeLinear animations:^{
+
+        [UIView addKeyframeWithRelativeStartTime:0 relativeDuration:1.0 animations:^{
             toVC.view.transform = CGAffineTransformIdentity;
             fromVC.view.transform = CGAffineTransformIdentity;
             maskView.alpha = 0;
@@ -95,20 +102,19 @@
     } completion:^(BOOL finished) {
         if (![transitionContext transitionWasCancelled]) {
             maskView.toViewSubViews = nil;
-            [MaskView releaseInstance];
+            [CWMaskView releaseInstance];
             [backImageView removeFromSuperview];
         }
         [transitionContext completeTransition:![transitionContext transitionWasCancelled]];
         
     }];
-    
 }
 
 - (void)defaultAnimationWithContext:(id <UIViewControllerContextTransitioning>)transitionContext {
     UIViewController *fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIViewController *toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     
-    MaskView *maskView = [MaskView shareInstance];
+    CWMaskView *maskView = [CWMaskView shareInstance];
     maskView.frame = fromVC.view.bounds;
     [fromVC.view addSubview:maskView];
     UIView *containerView = [transitionContext containerView];
@@ -125,19 +131,20 @@
     CGFloat width = self.configuration.distance;
     CGFloat x = - width / 2;
     CGFloat ret = 1;
-    if (self.configuration.direction == CWDrawerTransitionDirectionRight) {
+    if (self.configuration.direction == CWDrawerTransitionFromRight) {
         x = kCWSCREENWIDTH - width / 2;
         ret = -1;
     }
     toVC.view.frame = CGRectMake(x, 0, CGRectGetWidth(containerView.frame), CGRectGetHeight(containerView.frame));
     [containerView addSubview:toVC.view];
     [containerView addSubview:fromVC.view];
-    
-    CGAffineTransform t1 = CGAffineTransformMakeTranslation(ret * width, 0);
-    CGAffineTransform t2 = CGAffineTransformMakeScale(1.0, self.configuration.scaleY);
+    // 计算缩放后需要平移的距离
+    CGFloat translationX = width - (kCWSCREENWIDTH * (1 - self.configuration.scaleY) / 2);
+    CGAffineTransform t1 = CGAffineTransformMakeScale(self.configuration.scaleY, self.configuration.scaleY);
+    CGAffineTransform t2 = CGAffineTransformMakeTranslation(ret * translationX, 0);
     CGAffineTransform fromVCTransform = CGAffineTransformConcat(t1, t2);
     CGAffineTransform toVCTransform;
-    if (self.configuration.direction == CWDrawerTransitionDirectionRight) {
+    if (self.configuration.direction == CWDrawerTransitionFromRight) {
         toVCTransform = CGAffineTransformMakeTranslation(ret * (x - CGRectGetWidth(containerView.frame) + width), 0);
     }else {
         toVCTransform = CGAffineTransformMakeTranslation(ret * width / 2, 0);
@@ -162,18 +169,17 @@
             [containerView addSubview:fromVC.view];
         }else {
             [imageV removeFromSuperview];
-            [MaskView releaseInstance];
+            [CWMaskView releaseInstance];
             [transitionContext completeTransition:NO];
         }
     }];
-    
 }
 
 - (void)maskAnimationWithContext:(id <UIViewControllerContextTransitioning>)transitionContext {
     UIViewController *fromVC = [transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
     UIViewController *toVC = [transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
     
-    MaskView *maskView = [MaskView shareInstance];
+    CWMaskView *maskView = [CWMaskView shareInstance];
     maskView.frame = fromVC.view.bounds;
     [fromVC.view addSubview:maskView];
     
@@ -182,7 +188,7 @@
     CGFloat width = self.configuration.distance;
     CGFloat x = - width;
     CGFloat ret = 1;
-    if (self.configuration.direction == CWDrawerTransitionDirectionRight) {
+    if (self.configuration.direction == CWDrawerTransitionFromRight) {
         x = kCWSCREENWIDTH;
         ret = -1;
     }
@@ -209,12 +215,10 @@
             [containerView bringSubviewToFront:toVC.view];
             maskView.userInteractionEnabled = YES;
         }else {
-            [MaskView releaseInstance];
+            [CWMaskView releaseInstance];
             [transitionContext completeTransition:NO];
         }
     }];
-    
-    
 }
 
 
@@ -226,14 +230,25 @@
 @end
 
 
-@implementation MaskView
-static MaskView *cw_shareInstance = nil;
+@implementation CWMaskView
+
+static CWMaskView *cw_shareInstance = nil;
 static dispatch_once_t cw_onceToken;
 + (instancetype)shareInstance {
     dispatch_once(&cw_onceToken, ^{
-        cw_shareInstance = [[MaskView alloc] init];
+        cw_shareInstance = [[CWMaskView alloc] init];
     });
     return cw_shareInstance;
+}
+
++ (void)releaseInstance{
+    [cw_shareInstance removeFromSuperview];
+    cw_onceToken = 0;
+    cw_shareInstance = nil;
+}
+
+- (void)dealloc {
+    //    NSLog(@"mask dealloc");
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -248,32 +263,22 @@ static dispatch_once_t cw_onceToken;
         tap.numberOfTapsRequired = 1;
         [self addGestureRecognizer:tap];
         
-        
         UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc] initWithTarget:self action:@selector(handleGesture:)];
         [self addGestureRecognizer:pan];
-        
     }
     return self;
 }
 
 - (void)singleTap {
-    [[NSNotificationCenter defaultCenter] postNotificationName:CWLateralSlideTapNotication object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:CWLateralSlideTapNoticationKey object:self];
 }
 
 - (void)handleGesture:(UIPanGestureRecognizer *)pan {
-    [[NSNotificationCenter defaultCenter] postNotificationName:CWLateralSlidePanNotication object:pan];
-    
+    [[NSNotificationCenter defaultCenter] postNotificationName:CWLateralSlidePanNoticationKey object:pan];
 }
 
-+ (void)releaseInstance{
-    [cw_shareInstance removeFromSuperview];
-    cw_onceToken = 0;
-    cw_shareInstance = nil;
-}
-
-- (void)dealloc {
-//    NSLog(@"mask dealloc");
-}
+// 屏蔽掉touchesbegin的响应链
+- (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event { }
 
 @end
 
@@ -281,10 +286,10 @@ NSString *const CWLateralSlideMaskViewKey = @"CWLateralSlideMaskViewKey";
 NSString *const CWLateralSlideAnimatorKey = @"CWLateralSlideAnimatorKey";
 NSString *const CWLateralSlideInterativeKey = @"CWLateralSlideInterativeKey";
 
-NSString *const CWLateralSlidePanNotication = @"CWLateralSlidePanNotication";
-NSString *const CWLateralSlideTapNotication = @"CWLateralSlideTapNotication";
+NSString *const CWLateralSlidePanNoticationKey = @"CWLateralSlidePanNoticationKey";
+NSString *const CWLateralSlideTapNoticationKey = @"CWLateralSlideTapNoticationKey";
 
-
+NSString *const CWLateralSlideDirectionKey = @"CWLateralSlideDirectionKey";
 
 
 

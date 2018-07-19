@@ -1,14 +1,8 @@
 # CWLateralSlide
+![iOS7+](https://img.shields.io/badge/iOS-7%2B-orange.svg)
+[![Version](https://img.shields.io/cocoapods/v/CWLateralSlide.svg?style=flat)](https://cocoapods.org/pods/CWLateralSlide)
 
-## 更新：
-```
-1、更新注册手势驱动界面方法cw_registerShowIntractiveWithEdgeGesture:支持同时双边手势驱动，（感谢idozhuoyong童鞋提供的优化方案🙏）
-2、demo增加侧滑抽屉界面进行系统present的场景与解决方式
-```
-
-目前有一些侧滑框架适用场景的局限性很高，且固定死的模板，比如设置一个leftVC，rightVC，middleVC为TabbarVC（根控制器），如果我要使用这种方式来实现侧滑，就必须根据它的要求来调整我们整个APP的架构，侵入型很高，新项目还好，老项目只能说，o shit！😁。假如界面要换交互方式，由于耦合高，替换成本是比较大的，而且侧滑的抽屉界面会一直存在内存里，展示在我们看不见的地方（屏幕外，或者根控制器下边）。
-
-我们的优势:没有所谓的leftVC，rightVC，对整个项目没有任何限制和依赖，不需要设置啥XXXTabbarController这种根控制器，也没有任何需要继承自某某类～真正的**0耦合、0侵入、0污染**。使用极致简单，真正的大白话操作。。侧滑的控制器拥有完整的生命周期函数调用。也就是说，侧滑的界面在隐藏的情况下，并不会对app产生额外的内存占用（正确的被释放）。
+打破传统侧滑抽屉框架LeftVC，RightVC，CenterVC模式，使用自定义转场动画实现的**0耦合、0侵入、0污染**的抽屉框架，抽屉控制器拥有完整的生命周期函数调用，关闭抽屉时抽屉不会展示在我们看不见的地方（屏幕外，或者根控制器下边），**最重要的是简单：只要一行代码就能拥有一个侧滑抽屉**。
 
 实现的一些细节方面可以看一下我的文章
 [需要侧滑抽屉效果？一行代码足以](https://juejin.im/post/5a444b94518825698e7259f6) 
@@ -16,17 +10,31 @@
     
 ![效果](https://github.com/ChavezChen/CWLateralSlide/blob/master/示例图.gif)
 
-使用方法：
-首先导入我们的分类：#import "UIViewController+CWLateralSlide.h" 里面仅有3个函数.
-   
-   1、如果想实现一下示例图中左侧点击侧滑的功能，只需要1行代码：
+## How To Use：
+**使用cocoapods或者手动拖入.**
 ```objective-c
-// 调用这个方法
-[self cw_showDrawerViewController:vc animationType:CWDrawerAnimationTypeDefault configuration:nil];
-```
-vc为你需要侧滑出来的控制器，调用这个方法你就拥有了侧滑功能+左划返回功能，其实这样就已经有了一个很好的侧滑功能了，如果需要更多的一些功能，可以往下看
+platform :ios, '7.0'
 
-2、如果需要实现手势显示侧边控制器的功能，我们需要注册一个手势，使用也非常简单，代码如下
+target 'TargetName' do
+pod 'CWLateralSlide', '~> 1.6.1'
+end
+```
+**搜索不到最新版本的解决方法：**
+```
+1、执行rm ~/Library/Caches/CocoaPods/search_index.json 删除索引的缓存再搜索，如果这样也搜索不到的话更新cocoapods
+2、执行 pod repo update --verbose 更新成功之后就没问题了
+```
+### 1、显示抽屉：
+导入分类：#import "UIViewController+CWLateralSlide.h" 
+```objective-c
+// 调用这个方法，Using this method
+[self cw_showDefaultDrawerViewController:vc];
+// 或者这样～Or it
+// [self cw_showDrawerViewController:vc animationType:CWDrawerAnimationTypeDefault configuration:nil];
+```
+vc为你需要侧滑出来的控制器，调用这个方法你就拥有一个抽屉效果+左划/点击返回功能。
+
+### 2、注册滑动手势驱动抽屉
 ```objective-c
     // 注册手势驱动
     __weak typeof(self)weakSelf = self;
@@ -40,9 +48,9 @@ vc为你需要侧滑出来的控制器，调用这个方法你就拥有了侧滑
         }
     }];
 ```
-做完第二步，我们在界面上往右滑动的时候，左侧的控制器会跟着出现
+做完第二步，我们在界面上往右滑动的时候，左侧的抽屉会跟着出现
 
-3、如果想要实现如示例图上面右侧按钮的点击这种自定义的效果，我们只需要在第一步的时候多加一行代码，就是给方法传入一个configuration。代码如下：
+### 3、自定义抽屉效果：
 ```objective-c
 - (void)rightClick {
     
@@ -55,25 +63,82 @@ vc为你需要侧滑出来的控制器，调用这个方法你就拥有了侧滑
 ```
 这样你就有了如示例图里面带有一定缩放的侧滑功能
 
-4、由于我们实现的本质是系统的present，侧滑出来的控制器不带有导航控制器，但是我们又需要进行push操作，该怎么办呢？这个我们也又封装一个方法，代码如下;
+### 4、抽屉内Push、Present操作
 ```objective-c
     NextViewController *vc = [NextViewController new];
     //  在侧滑的控制器内(没有导航控制器)，调用这个方法进行push操作就可以了
     [self cw_pushViewController:vc];
 ```
-5、主动关闭抽屉的方法
+### 5、主动关闭抽屉
 ```objective-c
+// 注意：动画要设置为YES
 [self dismissViewControllerAnimated:YES completion:nil];
 ```
-因为我们实现的本质就是调用系统的present方法，所以关闭抽屉我们只需要调用系统的dismiss方法即可，注意：动画要设置为YES。
-
-
-还有不是很了解的可以下载demo看一下。有任何问题欢迎大家向我提issue，我会积极响应大家的问题。。
-
-目前也支持cocoapods，只需要： pod 'CWLateralSlide', '~> 1.4.0' 目前是1.4.0版本，因为是新上传的，如果搜索不到，可以更新一下cocoapods或者清除一下repo的缓存再 重新搜索。。搜索不到的解决方法(适用于任何框架不能搜索到最新版本的情况)：
+因为我们实现的本质就是调用系统的present方法，所以关闭抽屉我们只需要调用系统的dismiss方法即可，**注意：动画要设置为YES**。
+### 6、多手势冲突自定义处理接口
+直接在调用cw_showDrawer...方法的控制器里实现下面的函数，进行自己的手势处理方法
+```objective-c
+#pragma mark - 自定义处理手势冲突接口
+- (BOOL)cw_gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    return YES;// 可以在这里实现自己需要处理的手势冲突逻辑
+}
 ```
-1、执行rm ~/Library/Caches/CocoaPods/search_index.json 删除索引的缓存再搜索，如果这样也搜索不到的话更新cocoapods
-2、执行 pod repo update --verbose 更新成功之后就没问题了
+### 7、打开抽屉情况下的布局
+![效果](https://github.com/ChavezChen/CWLateralSlide/blob/master/layoutImage/allLayout.png)
+
+## update：
 ```
+1.6.2
+添加多手势冲突自定义处理接口。
+1.6.1
+修改iOS8手势打开界面的时候闪动的问题。
+1.5.9
+修改在特定场景下收起抽屉会多次dismiss的bug。
+1.5.8
+重新调整控制器直接为tableviewController时手势冲突问题，如果主界面类似QQ聊天列表需要侧滑显示抽屉同时需要左划显示删除等按钮可以翻看文末。
+1.5.7
+修改控制器直接为tableviewController时手势冲突问题
+1.5.6
+修改当navigation为根控制器时push动画闪动问题。
+1.5.5
+在抽屉界面进行Push与Present的自定义接口，增加隐藏抽屉动画时间的参数，可制定性更高
+1.5.3
+新增在侧滑出来的界面present另一个界面的方法。。。或者也可以使用demo内提供的直接present的方法。
+1.5.2
+新增手势驱动完成临界点参数，新增显示抽屉与隐藏抽屉动画时间参数。
+1.5.1
+增加一个默认抽屉效果的API,只需要一个VC参数
+1.5.0
+优化抽屉界面push动画效果
+1.4.2
+修改与cell侧滑删除冲突的问题。修改iphoneX会跳动的问题。修改缩放界面时界面失帧的问题
+1.4.0
+注册手势API更新，智能识别手势方向（感谢idozhuoyong童鞋的优化建议）
+```
+
+**主界面类似QQ聊天列表需要侧滑显示抽屉同时需要左划显示删除等按钮手势的处理方式：**
+
+实现自定义处理手势冲突接口、修改成如下，并在注册手势的时候将是否开启**边缘手势设置为YES**；即可解决手势冲突的问题。
+```
+#pragma mark - 自定义处理手势冲突接口
+-(BOOL)cw_gestureRecognizer:(UIGestureRecognizer *)gestureRecognizer shouldRecognizeSimultaneouslyWithGestureRecognizer:(UIGestureRecognizer *)otherGestureRecognizer {
+    // 如果是自己创建tableview添加在VC的view上 这样写就足够了
+    if ([otherGestureRecognizer.view isKindOfClass:[UITableView class]]) {
+        return YES;
+    }
+    // 如果是一个整体的tableViewController 需要下成下面这样
+//    if ([[self viewController:otherGestureRecognizer.view] isKindOfClass:[UITableViewController class]] || //[otherGestureRecognizer.view isKindOfClass:[UITableView class]]) {
+//        return YES;
+//    }
+    return NO;
+}
+```
+**关于iOS11 设置scale界面缩放时导航栏出现20像素高黑条或者浅白条的问题可以看看下面这个issue**
+
+[issues24](https://github.com/ChavezChen/CWLateralSlide/issues/24) 
+
+还有不是很了解的可以下载demo看一下。有任何问题欢迎大家向我提issue或者加我联系方式，我会积极响应大家的问题。。
+
+**QQ\微信:543438338**
+
 最后希望大家给个star支持一下，感谢。
-

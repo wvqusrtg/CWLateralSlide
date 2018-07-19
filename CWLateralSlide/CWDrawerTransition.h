@@ -11,8 +11,8 @@
 #import "CWLateralSlideConfiguration.h"
 
 typedef NS_ENUM(NSUInteger,CWDrawerTransitiontype) {
-    CWDrawerTransitiontypeShow = 0,
-    CWDrawerTransitiontypeHidden
+    CWDrawerTransitiontypeShow = 0,      // 显示抽屉
+    CWDrawerTransitiontypeHidden,        // 隐藏抽屉
 };
 
 
@@ -30,7 +30,7 @@ typedef NS_ENUM(NSUInteger,CWDrawerAnimationType) {
 @end
 
 
-@interface MaskView : UIView<UIGestureRecognizerDelegate>
+@interface CWMaskView : UIView<UIGestureRecognizerDelegate>
 
 @property (nonatomic,copy) NSArray *toViewSubViews;
 
@@ -45,9 +45,10 @@ UIKIT_EXTERN NSString *const CWLateralSlideAnimatorKey;
 UIKIT_EXTERN NSString *const CWLateralSlideMaskViewKey;
 UIKIT_EXTERN NSString *const CWLateralSlideInterativeKey;
 
-UIKIT_EXTERN NSString *const CWLateralSlidePanNotication;
-UIKIT_EXTERN NSString *const CWLateralSlideTapNotication;
+UIKIT_EXTERN NSString *const CWLateralSlidePanNoticationKey;
+UIKIT_EXTERN NSString *const CWLateralSlideTapNoticationKey;
 
+UIKIT_EXTERN NSString *const CWLateralSlideDirectionKey;
 
 
 

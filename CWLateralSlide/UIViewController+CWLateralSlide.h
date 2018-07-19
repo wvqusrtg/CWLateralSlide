@@ -4,13 +4,24 @@
 //
 //  Created by chavez on 2017/6/29.
 //  Copyright © 2017年 chavez. All rights reserved.
-//
+//  v1.4.2
 
 #import <UIKit/UIKit.h>
 #import "CWLateralSlideAnimator.h"
 #import "CWLateralSlideConfiguration.h"
 
 @interface UIViewController (CWLateralSlide)
+
+/*-----------------------------------v1.6.2-----------------------------------------*/
+/*-----------------------------------v1.6.2-----------------------------------------*/
+/*-----------------------------------v1.6.2-----------------------------------------*/
+
+/**
+ 显示默认抽屉
+ 从左侧滑出类似QQ抽屉效果
+ @param viewController 需要侧滑显示出来的控制器
+ */
+- (void)cw_showDefaultDrawerViewController:(UIViewController *)viewController;
 
 /**
  呼出侧滑控制器的方法（主要）
@@ -32,13 +43,34 @@
 - (void)cw_registerShowIntractiveWithEdgeGesture:(BOOL)openEdgeGesture transitionDirectionAutoBlock:(void(^)(CWDrawerTransitionDirection direction))transitionDirectionAutoBlock;
 
 /**
- 自定义的push方法
- 因为侧滑出来的控制器实际上是通过present出来的，这个时候是没有导航控制器的，而侧滑出来的控制器上面的一些点击事件需要再push下一个控制器的时候，我们只能通过寻找到根控制器找到对应的导航控制器再进行push操作，QQ的效果能证明是这么实现的
- @param viewController 需要push出来的控制器
+ Custom push method 自定义的push动画
+ push another viewController in the side slip out of the controller 在侧滑界面push另一个界面
+ @param viewController Need to push of the controller
  */
 - (void)cw_pushViewController:(UIViewController *)viewController;
 
+/**
+ Custom present method 自定义的present动画
+ present another viewController in the side slip out of the controller 在侧滑界面present另一个界面
+ @param viewController Need to present of the controller
+ */
+- (void)cw_presentViewController:(UIViewController *)viewController;
 
+/**
+ Custom push method 自定义的push动画,比上面的API多了一个时间参数
+ push another viewController in the side slip out of the controller. 在侧滑界面push另一个界面
+ @param vc  Need to push of the controller
+ @param duration  The Drewer Hidden Animation Duration When Push. push时抽屉隐藏动画的持续时间
+ */
+- (void)cw_pushViewController:(UIViewController *)vc drewerHiddenDuration:(NSTimeInterval)duration;
+
+/**
+ Custom present method 自定义的present动画,比上面的API多了一个时间参数
+ present another viewController in the side slip out of the controller 在侧滑界面present另一个界面
+ @param vc Need to present of the controller
+ @param duration  The Drewer Hidden Animation Duration When present. present时抽屉隐藏动画的持续时间
+ */
+- (void)cw_presentViewController:(UIViewController *)vc drewerHiddenDuration:(NSTimeInterval)duration;
 
 
 @end

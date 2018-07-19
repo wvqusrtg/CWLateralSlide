@@ -11,8 +11,8 @@
 
 @interface CWLateralSlideAnimator ()
 
-@property (nonatomic,strong)CWInteractiveTransition *interactiveHidden;
-@property (nonatomic,strong)CWInteractiveTransition *interactiveShow;
+@property (nonatomic,strong) CWInteractiveTransition *interactiveHidden;
+@property (nonatomic,strong) CWInteractiveTransition *interactiveShow;
 
 @end
 
@@ -31,7 +31,7 @@
 }
 
 - (void)dealloc {
-    NSLog(@"%s",__func__);
+//    NSLog(@"%s",__func__);
 }
 
 - (void)setConfiguration:(CWLateralSlideConfiguration *)configuration {
